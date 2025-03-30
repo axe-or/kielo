@@ -41,9 +41,6 @@ typedef struct {
 	isize len;
 } TokenArray;
 
-// void* resize_func(void* ctx, void* ptr, isize old_size, isize new_size, isize align)
-// void* resize_func(void* ctx, void* ptr, isize old_size, isize new_size, isize align)
-
 typedef struct {
 	String source;
 	i32 current;
@@ -60,7 +57,10 @@ Lexer lexer_make(String source){
 }
 
 int main(){
-	static byte memory[200];
-	Arena arena = arena_create(memory, 200);
+	const isize arena_size = 8 * mem_megabyte;
+	byte* arena_mem = heap_alloc(arena_size, 4096);
+	Arena arena = arena_create(arena_mem, arena_size);
+
+	printf("%p\n", arena.data);
 }
 

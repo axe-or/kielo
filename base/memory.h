@@ -3,11 +3,15 @@
 #include "types.h"
 #include "ensure.h"
 
-//// Core memory operations
+#define mem_kilobyte (1024ll)
+#define mem_megabyte (1024ll * 1024ll)
+#define mem_gigabyte (1024ll * 1024ll * 1024ll)
 
+//// Core memory operations
 void mem_copy(void* dest, void const* source, isize count);
 
 void mem_copy_no_overlap(void* dest, void const* source, isize count);
+
 void mem_set(void* dest, byte val, isize count);
 
 int mem_compare(void const* left, void* const right, isize count);
@@ -58,11 +62,16 @@ void arena_region_end(ArenaRegion reg);
 
 void* arena_realloc(Arena* a, void* ptr, isize old_size, isize new_size, isize align);
 
-//// Container helpers
-typedef void* (*MemReallocFunc)(void* ctx, void* ptr, isize old_size, isize new_size, isize align);
+//// Heap allocator
+void* heap_alloc(isize size, isize align);
 
-static inline
-void* arena_realloc_wrapper(void* a, void* ptr, isize old_size, isize new_size, isize align){
-	return arena_realloc(a, ptr, old_size, new_size, align);
-}
+void heap_free(void* ptr);
+
+//// Container helpers
+// typedef void* (*MemReallocFunc)(void* ctx, void* ptr, isize old_size, isize new_size, isize align);
+//
+// static inline
+// void* arena_realloc_wrapper(void* a, void* ptr, isize old_size, isize new_size, isize align){
+// 	return arena_realloc(a, ptr, old_size, new_size, align);
+// }
 

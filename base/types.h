@@ -53,6 +53,7 @@ typedef ptrdiff_t isize;
 typedef size_t    usize;
 typedef uintptr_t uintptr;
 typedef uint8_t   byte;
+typedef int32_t   rune;
 
 typedef struct {
 	byte const* v;
