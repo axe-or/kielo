@@ -1,7 +1,7 @@
 #!/usr/bin/env sh
 
 cc=clang
-cflags='-O2 -std=c17 -fPIC -fno-strict-aliasing -fwrapv -fsanitize=address'
+cflags='-O2 -std=c17 -fPIC -fno-strict-aliasing -fwrapv -fsanitize=address -g'
 ldflags=''
 
 set -eu

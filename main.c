@@ -2,6 +2,7 @@
 #include "base/ensure.h"
 #include "base/string.h"
 #include "base/memory.h"
+#include "base/thread.h"
 
 typedef enum {
 	None = 0,
@@ -62,6 +63,12 @@ UTF8Decoded lexer_advance(Lexer* lex){
 	return res;
 }
 
+
+void worker(void* p){
+	int n = (int)(uintptr)p;
+	printf("> %d\n", n);
+}
+
 int main(){
 	const isize arena_size = 8 * mem_megabyte;
 	byte* arena_mem = heap_alloc(arena_size, 4096);
@@ -69,5 +76,15 @@ int main(){
 
 	String s = str_format(&arena, "%s %d %d\n", "HELLOOOO", 69, 69);
 	printf("%p %ld %.*s\n", s.v, s.len, (int)s.len, (char const*)s.v);
+
+	Thread* workers[20] = {0};
+	for(int i = 0; i < 20; i++){
+		workers[i] = thread_create(worker, (void*)(uintptr)i);
+	}
+
+	for(int i = 0; i < 20; i++){
+		thread_join(workers[i]);
+		thread_destroy(workers[i]);
+	}
 }
 

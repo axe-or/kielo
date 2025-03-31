@@ -11,6 +11,14 @@
 	#error "Unsupported compiler"
 #endif
 
+#if defined(__linux__)
+	#define OS_LINUX 1
+#elif defined(_WIN32) || defined(_WIN64)
+	#define OS_WINDOWS 1
+#else
+	#error "Unsupported operating system"
+#endif
+
 //// Useful macros
 #if defined(COMPILER_MSVC)
 	#define typeof(X) __typeof(X)

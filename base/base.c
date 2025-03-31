@@ -6,3 +6,9 @@
 #include "string.c"
 #include "format.c"
 
+#if defined(OS_LINUX)
+#include "thread_posix.c"
+#else
+#include "thread_windows.c"
+#endif
+

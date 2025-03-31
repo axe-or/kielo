@@ -27,7 +27,14 @@ void panic_ex(char const* msg, char const* file, int line){
 	trap();
 }
 
-#define ensure(Pred, Msg) ensure_ex((Pred), (Msg), __FILE__, __LINE__)
-#define panic(Msg)        panic_ex((Msg), __FILE__, __LINE__)
+static inline _Noreturn
+void unimplemented_ex(char const* msg, char const* file, int line){
+	printf("(%s:%d) Unimplemented: %s\n", file, line, msg);
+	trap();
+}
+
+#define ensure(Pred, Msg)  ensure_ex((Pred), (Msg), __FILE__, __LINE__)
+#define panic(Msg)         panic_ex((Msg), __FILE__, __LINE__)
+#define unimplemented(Msg) unimplemented_ex((Msg), __FILE__, __LINE__)
 
 
