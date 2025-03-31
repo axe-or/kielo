@@ -133,3 +133,4 @@ UTF8Decoded utf8_decode(byte const* buf, isize len){
 #undef UTF8_SIZE3
 #undef UTF8_SIZE4
 #undef CONT
+

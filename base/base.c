@@ -4,4 +4,5 @@
 #include "heap.c"
 
 #include "string.c"
+#include "format.c"
 

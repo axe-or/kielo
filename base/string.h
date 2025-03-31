@@ -1,5 +1,14 @@
 #pragma once
 #include "types.h"
+#include "memory.h"
+
+#if defined(__has_attribute)
+	#if __has_attribute(format)
+		#define str_attribute_format(fmt,va) __attribute__((format(printf,fmt,va)))
+	#endif
+#else
+	#define str_attribute_format(fmt,va)
+#endif
 
 typedef struct {
 	byte bytes[4];
@@ -24,3 +33,8 @@ UTF8Encoded utf8_encode(rune r);
 
 UTF8Decoded utf8_decode(byte const* buf, isize n);
 
+String str_format(Arena* arena, char const * restrict fmt, ...) str_attribute_format(2, 3);
+
+String str_vformat(Arena* arena, char const * restrict fmt, va_list argp);
+
+#undef str_attribute_format

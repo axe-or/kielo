@@ -1,5 +1,6 @@
 #include "base/types.h"
 #include "base/ensure.h"
+#include "base/string.h"
 #include "base/memory.h"
 
 typedef enum {
@@ -23,10 +24,6 @@ typedef enum {
 typedef struct {
 	String filename;
 	u64 offset;
-} SourceLocation;
-
-typedef struct {
-	SourceLocation location;
 	String message;
 	u32 type;
 } CompilerError;
@@ -56,11 +53,21 @@ Lexer lexer_make(String source){
 	return lex;
 }
 
+UTF8Decoded lexer_advance(Lexer* lex){
+	if(lex->current >= lex->source.len){
+		return (UTF8Decoded){0,0};
+	}
+	UTF8Decoded res = utf8_decode(lex->source.v + lex->current, lex->source.len - lex->current);
+	lex->current += res.len;
+	return res;
+}
+
 int main(){
 	const isize arena_size = 8 * mem_megabyte;
 	byte* arena_mem = heap_alloc(arena_size, 4096);
 	Arena arena = arena_create(arena_mem, arena_size);
 
-	printf("%p\n", arena.data);
+	String s = str_format(&arena, "%s %d %d\n", "HELLOOOO", 69, 69);
+	printf("%p %ld %.*s\n", s.v, s.len, (int)s.len, (char const*)s.v);
 }
 
