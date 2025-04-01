@@ -135,35 +135,24 @@ UTF8Decoded lexer_advance(Lexer* lex){
 	return res;
 }
 
-
 void worker(void* p){
 	int n = (int)(uintptr)p;
-	printf("> %d\n", n);
+	printf("> %03d\n", n);
 }
 
 int main(){
-	// const isize arena_size = 8 * mem_megabyte;
-	// byte* arena_mem = heap_alloc(arena_size, 4096);
-	// Arena arena = arena_create(arena_mem, arena_size);
+	const isize arena_size = 8 * mem_megabyte;
+	byte* arena_mem = heap_alloc(arena_size, 4096);
+	Arena arena = arena_create(arena_mem, arena_size);
 
-	// String s = str_format(&arena, "%s %d %d\n", "HELLOOOO", 69, 69);
-	// printf("%p %ld %.*s\n", s.v, s.len, (int)s.len, (char const*)s.v);
+	String s = str_format(&arena, "%s %d %d\n", "HELLOOOO", 69, 69);
+	printf("%p %ld %.*s\n", s.v, s.len, (int)s.len, (char const*)s.v);
 
-	// heap_free(arena_mem);
+	heap_free(arena_mem);
 
-	// for(int i = 0; i < TokenKind__len; i++){
-	// 	String s = token_kind_names[i];
-	// 	printf("%.*s = %td\n", (int)s.len, (char const*)s.v, s.len);
-	// }
-
-	Thread* workers[20] = {0};
-	for(int i = 0; i < 20; i++){
-		workers[i] = thread_create(worker, (void*)(uintptr)i);
-	}
-
-	for(int i = 0; i < 20; i++){
-		thread_join(workers[i]);
-		thread_destroy(workers[i]);
+	for(int i = 0; i < TokenKind__len; i++){
+		String s = token_kind_names[i];
+		printf("%.*s = %td\n", (int)s.len, (char const*)s.v, s.len);
 	}
 }
 
