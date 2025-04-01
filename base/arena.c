@@ -17,9 +17,9 @@ void* arena_alloc(Arena* a, isize size, isize align){
 
 	isize available = a->capacity - (current - base);
 
-	uintptr aligned  = mem_align_forward_ptr(current, align);
-	uintptr padding  = aligned - current;
-	uintptr required = padding + size;
+	uintptr aligned = mem_align_forward_ptr(current, align);
+	uintptr padding = aligned - current;
+	isize required  = padding + size;
 
 	if(required > available){
 		return NULL; /* Out of memory */

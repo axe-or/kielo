@@ -3,7 +3,7 @@
 
 void* heap_alloc(isize size, isize align){
 	ensure(mem_valid_alignment(align), "Invalid alignment");
-	align = max(align, alignof(void*));
+	align = max(align, (isize)alignof(void*));
 
 	isize space = align - 1 + sizeof(void*) + size;
 	void* allocated_mem = calloc(space, 1);

@@ -21,7 +21,8 @@ Thread* thread_create(ThreadFunc f, void* arg){
 	t->fn = f;
 	t->arg = arg;
 
-	pthread_create(&t->handle, NULL, thread_pthread_wrapper, t);
+	int status = pthread_create( &t->handle, NULL, thread_pthread_wrapper, t);
+	ensure(status >= 0, "Failed to create thread");
 	return t;
 }
 
@@ -29,6 +30,10 @@ void thread_join(Thread* t){
 	if(t == NULL){ return; }
 	void* p = 0;
 	pthread_join(t->handle, &p);
+}
+
+void thread_terminate(Thread* t){
+	pthread_cancel(t->handle);
 }
 
 void thread_destroy(Thread* t){

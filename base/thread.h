@@ -9,5 +9,8 @@ Thread* thread_create(ThreadFunc f, void* arg);
 
 void thread_join(Thread* t);
 
+void thread_terminate(Thread* t);
+
 void thread_destroy(Thread* t);
+
 
