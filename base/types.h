@@ -70,5 +70,5 @@ typedef struct {
 } String;
 
 // String literal
-#define str_lit(S) ((String){.v = "" S "", .len = sizeof(S)})
+#define str_lit(S) ((String){.v = (byte const*)("" S ""), .len = (sizeof(S) - 1)})
 

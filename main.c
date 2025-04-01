@@ -11,16 +11,88 @@ typedef enum {
 	UnclosedString,
 } LexerError;
 
-typedef enum {
-	Unknown = 0,
+#define SPECIAL_TOKENS \
+	X(Unknown, "<Unknown>") \
+	X(Identifier, "") \
+	X(String, "") \
+	X(Real, "") \
+	X(Integer, "") \
 
-	ParenOpen,
-	ParenClose,
-	SquareOpen,
-	SquareClose,
-	CurlyOpen,
-	CurlyClose,
-} TokenType;
+#define DELIMITER_TOKENS \
+	/* Delimiters */ \
+	X(ParenOpen, "(") \
+	X(ParenClose, ")") \
+	X(SquareOpen, "[") \
+	X(SquareClose, "]") \
+	X(CurlyOpen, "{") \
+	X(CurlyClose, "}") \
+	X(Dot, ".") \
+	X(Comma, ",") \
+	X(Colon, ":") \
+	X(Semicolon, ";") \
+	X(Assign, "=") \
+	/* Arithmetic */ \
+	X(Plus, "+") \
+	X(Minus, "-") \
+	X(Star, "*") \
+	X(Slash, "/") \
+	X(Modulo, "%") \
+	X(And, "&") \
+	X(Or, "|") \
+	X(Tilde, "~") \
+	X(ShiftLeft, "<<") \
+	X(ShiftRight, ">>") \
+	/* Logic */ \
+	X(LogicAnd, "&&") \
+	X(LogicOr, "||") \
+	X(LogicNot, "!") \
+	/* Comparison */ \
+	X(Equal, "==") \
+	X(NotEqual, "!=") \
+	X(Greater, ">") \
+	X(Less, "<") \
+	X(GreaterEqual, ">=") \
+	X(LessEqual, "<=")
+
+#define KEYWORD_TOKENS \
+	X(Let, "let") \
+	X(Fn, "fn") \
+	X(Return, "return") \
+	X(If, "if") \
+	X(Else, "else") \
+	X(For, "for") \
+	X(Continue, "continue") \
+	X(Break, "break") \
+
+
+#define ALL_TOKENS \
+	SPECIAL_TOKENS \
+	DELIMITER_TOKENS \
+	KEYWORD_TOKENS \
+
+typedef enum {
+	#define X(Name, _) TokenKind_##Name,
+	ALL_TOKENS
+	#undef X
+	TokenKind__len,
+} TokenKind;
+
+static String token_kind_names[TokenKind__len] = {
+	#define X(Name, Str) [TokenKind_##Name] = str_lit(Str),
+	ALL_TOKENS
+	#undef X
+};
+
+static struct { String lexeme; TokenKind kind; } keyword_lexemes[] = {
+	#define X(Name, Str) { str_lit(Str), TokenKind_##Name },
+	KEYWORD_TOKENS
+	#undef X
+};
+
+#undef SPECIAL_TOKENS
+#undef KEYWORD_TOKENS
+#undef DELIMITER_TOKENS
+#undef ALL_TOKENS
 
 typedef struct {
 	String filename;
@@ -77,14 +149,11 @@ int main(){
 	String s = str_format(&arena, "%s %d %d\n", "HELLOOOO", 69, 69);
 	printf("%p %ld %.*s\n", s.v, s.len, (int)s.len, (char const*)s.v);
 
-	Thread* workers[20] = {0};
-	for(int i = 0; i < 20; i++){
-		workers[i] = thread_create(worker, (void*)(uintptr)i);
-	}
+	heap_free(arena_mem);
 
-	for(int i = 0; i < 20; i++){
-		thread_join(workers[i]);
-		thread_destroy(workers[i]);
+	for(int i = 0; i < TokenKind__len; i++){
+		String s = token_kind_names[i];
+		printf("%.*s = %td\n", (int)s.len, (char const*)s.v, s.len);
 	}
 }
 
