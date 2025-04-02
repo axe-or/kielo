@@ -37,6 +37,8 @@ String str_format(Arena* arena, char const * restrict fmt, ...) str_attribute_fo
 
 String str_vformat(Arena* arena, char const * restrict fmt, va_list argp);
 
+String str_sub(String s, isize start, isize end);
+
 isize str_compare(String left, String right);
 
 f64 str_parse_f64(String s);

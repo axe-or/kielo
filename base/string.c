@@ -29,3 +29,8 @@ bool str_ends_with(String s, String postfix){
 	if(postfix.len == 0){ return true; }
 	return mem_compare(s.v + (s.len - postfix.len), postfix.v, postfix.len) == 0;
 }
+
+String str_sub(String s, isize start, isize end){
+	ensure(start <= s.len && end <= s.len && end >= start, "Improper range");
+	return (String){ .v = s.v + start, .len = end - start };
+}

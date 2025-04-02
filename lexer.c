@@ -92,8 +92,22 @@ bool lexer_match_advance(Lexer* l, rune match){
 	return false;
 }
 
-Token lexer_consume_line_comment(Lexer* l){
-	unimplemented("Comment");
+Token lexer_consume_line_comment(Lexer* lex){
+	String first = str_sub(lex->source, lex->current, lex->current + 2);
+	ensure(str_starts_with(first, str_lit("//")), "Not in a comment");
+	
+	lex->start = lex->current;
+	do {
+		if(lex->source.v[lex->current] == '\n'){ break; }
+		lex->current += 1;
+	} while(lex->current < lex->source.len);
+
+	Token token = {
+		.kind = TokenKind_Comment,
+		.lexeme = lexer_current_lexeme(lex),
+	};
+
+	return token;
 }
 
 Token lexer_consume_identifier_or_keyword(Lexer* lex){
@@ -106,7 +120,7 @@ Token lexer_consume_identifier_or_keyword(Lexer* lex){
 		UTF8Decoded dec = lexer_advance(lex);
 		rune c = dec.codepoint;
 
-		if(!is_alpha(c) && c != '_'){
+		if(!is_alpha(c) && !is_decimal(c) && c != '_'){
 			lex->current -= dec.len;
 			break;
 		}

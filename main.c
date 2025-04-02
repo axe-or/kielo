@@ -19,36 +19,23 @@ int main(){
 
 	String source = str_lit(
 		"+-*/%+=-=*=/=%=>><<<><=>=!!=&|~&&&=|||=\n"
-		"let x = 100;\n"
+		"//\nlet x:i32 = ;"
+		"//\n"
 	);
 
 	Lexer lex = lexer_create(source, &arena);
 
-	// do {
-	// 	Token tk = lexer_next_token(&lex);
-	// 	if(tk.kind == TokenKind_EndOfFile){ break; }
-	//
-	// 	printf("%12.*s | ", str_fmt(token_kind_name(tk.kind)));
-	// 	if(tk.lexeme.len > 0 && tk.kind != TokenKind_Whitespace){
-	// 		printf("\"%.*s\"\n", str_fmt(tk.lexeme));
-	// 	} else {
-	// 		printf("_\n");
-	// 	}
-	// } while(1);
+	do {
+		Token tk = lexer_next_token(&lex);
+		if(tk.kind == TokenKind_EndOfFile){ break; }
 
-	ensure(str_starts_with(str_lit("pipi popo"), str_lit("pipi")), "");
-	ensure(str_starts_with(str_lit("pipi popo"), str_lit("pipi popo")), "");
-	ensure(str_starts_with(str_lit("pipi popo"), str_lit("")), "");
-	ensure(!str_starts_with(str_lit("pipi popo"), str_lit("pipi popo.")), "");
-
-	ensure(str_ends_with(str_lit("pipi popo"), str_lit("popo")), "");
-	ensure(str_ends_with(str_lit("pipi popo"), str_lit("pipi popo")), "");
-	ensure(str_ends_with(str_lit("pipi popo"), str_lit("")), "");
-	ensure(!str_ends_with(str_lit("pipi popo"), str_lit("pipi popo.")), "");
-
-	// lexer_emit_error(&lex, LexerError_None, "CU porra");
-	// lexer_emit_error(&lex, LexerError_UnclosedString, "CU porra %d", 69);
-	// lexer_emit_error(&lex, LexerError_UnclosedString, "SKibidi porra");
+		printf("%12.*s | ", str_fmt(token_kind_name(tk.kind)));
+		if(tk.lexeme.len > 0 && tk.kind != TokenKind_Whitespace){
+			printf("\"%.*s\"\n", str_fmt(tk.lexeme));
+		} else {
+			printf("_\n");
+		}
+	} while(1);
 
 	for(CompilerError* err = lex.error; err != NULL; err = err->next){
 		print_compiler_error(err);

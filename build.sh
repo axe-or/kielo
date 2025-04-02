@@ -1,9 +1,11 @@
 #!/usr/bin/env sh
 
 cc=clang
-cflags='-O2 -std=c17 -fPIC -fno-strict-aliasing -fwrapv -g -fsanitize=address'
+cflags='-O1 -std=c17 -fPIC -fno-strict-aliasing -fwrapv'
 ldflags=''
 
+Run(){ echo "$@"; $@; }
+
 set -eu
-$cc $cflags -o kielo.exe main.c base/base.c $ldflags
+Run $cc $cflags -o kielo.exe main.c base/base.c $ldflags
 
