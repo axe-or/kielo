@@ -69,6 +69,9 @@ typedef struct {
 	isize len;
 } String;
 
+
 // String literal
 #define str_lit(S) ((String){.v = (byte const*)("" S ""), .len = (sizeof(S) - 1)})
+// To be used with `%.*s`
+#define str_fmt(S) (int)(S.len), (char const*)(S.v)
 

@@ -37,4 +37,3 @@ String str_format(Arena* arena, char const * restrict fmt, ...) str_attribute_fo
 
 String str_vformat(Arena* arena, char const * restrict fmt, va_list argp);
 
-#undef str_attribute_format
