@@ -7,12 +7,12 @@
 #define SPECIAL_TOKENS \
 	X(Unknown, "<Unknown>") \
 	X(EndOfFile, "<EOF>") \
-	X(Whitespace, "<Whitespace>") \
-	X(Comment, "") \
-	X(Identifier, "") \
-	X(String, "") \
-	X(Real, "") \
-	X(Integer, "") \
+	X(Whitespace, "<WS>") \
+	X(Comment, "Comment") \
+	X(Identifier, "Id") \
+	X(String, "String") \
+	X(Real, "Real") \
+	X(Integer, "Int") \
 
 #define DELIMITER_TOKENS \
 	/* Delimiters */ \
@@ -22,11 +22,11 @@
 	X(SquareClose, "]") \
 	X(CurlyOpen, "{") \
 	X(CurlyClose, "}") \
+	X(RightArrow, "->") \
 	X(Dot, ".") \
 	X(Comma, ",") \
 	X(Colon, ":") \
 	X(Semicolon, ";") \
-	X(Assign, "=") \
 	/* Arithmetic */ \
 	X(Plus, "+") \
 	X(Minus, "-") \
@@ -48,7 +48,16 @@
 	X(Greater, ">") \
 	X(Less, "<") \
 	X(GreaterEqual, ">=") \
-	X(LessEqual, "<=")
+	X(LessEqual, "<=") \
+	/* Assignment */ \
+	X(Assign, "=") \
+	X(AssignPlus, "+=") \
+	X(AssignMinus, "-=") \
+	X(AssignStar, "*=") \
+	X(AssignSlash, "/=") \
+	X(AssignModulo, "%=") \
+	X(AssignAnd, "&=") \
+	X(AssignOr, "|=")
 
 #define KEYWORD_TOKENS \
 	X(Let, "let") \
@@ -59,7 +68,6 @@
 	X(For, "for") \
 	X(Continue, "continue") \
 	X(Break, "break") \
-
 
 #define ALL_TOKENS \
 	SPECIAL_TOKENS \
@@ -73,11 +81,21 @@ typedef enum {
 	TokenKind__len,
 } TokenKind;
 
-static String token_kind_names[TokenKind__len] = {
-	#define X(Name, Str) [TokenKind_##Name] = str_lit(Str),
+static inline
+bool is_alpha(rune c){
+	return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z');
+}
+
+String token_kind_name(TokenKind k){
+	String s = str_lit("<INVALID TOKEN KIND>");
+	switch(k){
+	#define X(Name, Str) case TokenKind_##Name: s = str_lit(Str); break;
 	ALL_TOKENS
 	#undef X
-};
+	case TokenKind__len: break;
+	}
+	return s;
+}
 
 static struct { String lexeme; TokenKind kind; } keyword_lexemes[] = {
 	#define X(Name, Str) { str_lit(Str), TokenKind_##Name },
@@ -118,8 +136,8 @@ struct CompilerError {
 };
 
 typedef struct {
-	u32 kind;
 	String lexeme;
+	u32 kind;
 } Token;
 
 typedef struct {
@@ -223,9 +241,9 @@ Token lexer_consume_whitespace(Lexer* lex){
 	};
 
 	do {
-		lex->current += 1;
 		if(!is_whitespace(lex->source.v[lex->current])){ break; }
-	} while(lex->current < lex->source.len);
+		lex->current += 1;
+	} while(lex->current <= lex->source.len);
 
 	tk.lexeme = lexer_current_lexeme(lex);
 
@@ -241,8 +259,47 @@ bool lexer_consume_matching(Lexer* l, rune match){
 	return false;
 }
 
-#define MATCH_NEXT(Char, TType) if(lexer_consume_matching(lex, Char)){ token.kind = TokenKind_##TType; } break
-#define MATCH_DEFAULT(TType)    { token.kind = TokenKind_##TType; } break
+Token lexer_consume_line_comment(Lexer* l){
+	unimplemented("Comment");
+}
+
+Token lexer_consume_identifier_or_keyword(Lexer* lex){
+	rune first = lex->source.v[lex->current];
+	Token token = {0};
+	ensure(is_alpha(first) || first == '_', "Not on part of identifier");
+
+	lex->start = lex->current;
+	do {
+		UTF8Decoded dec = lexer_advance(lex);
+		rune c = dec.codepoint;
+
+		if(!is_alpha(c) && c != '_'){
+			lex->current -= dec.len;
+			break;
+		}
+	} while(lex->current < lex->source.len);
+
+	token.lexeme = lexer_current_lexeme(lex);
+	token.kind = TokenKind_Identifier;
+
+	const isize n =  sizeof(keyword_lexemes) / sizeof(keyword_lexemes[0]);
+
+	for(isize i = 0; i < n; i += 1){
+		String kw_lexeme = keyword_lexemes[i].lexeme;
+		TokenKind kw_kind = keyword_lexemes[i].kind;
+		// printf("CMP: '%.*s' <> '%.*s'\n", str_fmt(kw_lexeme), str_fmt(token.lexeme));
+
+		if(str_equals(token.lexeme, kw_lexeme)){
+			token.kind = kw_kind;
+			break;
+		}
+	}
+	return token;
+}
+
+// Lexer helpers to make it cleaner to read
+#define MATCH_NEXT(Char, TType) if(lexer_consume_matching(lex, Char)){ token.kind = TokenKind_##TType; break; }
+#define MATCH_DEFAULT(TType)    { token.kind = TokenKind_##TType; break; }
 
 Token lexer_next_token(Lexer* lex){
 	Token token = {
@@ -258,28 +315,101 @@ Token lexer_next_token(Lexer* lex){
 	}
 
 	switch(c){
-		case '\n': case '\r': case '\t': case '\v': case ' ': {
-			lex->current -= 1;
-			token = lexer_consume_whitespace(lex);
-		} break;
-
 		case '(':
 			MATCH_DEFAULT(ParenOpen);
+
+		case ')':
+			MATCH_DEFAULT(ParenClose);
+
+		case '[':
+			MATCH_DEFAULT(SquareOpen);
+
+		case ']':
+			MATCH_DEFAULT(SquareClose);
+
+		case '{':
+			MATCH_DEFAULT(CurlyOpen);
+
+		case '.':
+			MATCH_DEFAULT(Dot);
+
+		case ',':
+			MATCH_DEFAULT(Comma);
+
+		case ':':
+			MATCH_DEFAULT(Colon);
+
+		case ';':
+			MATCH_DEFAULT(Semicolon);
+
+		case '}':
+			MATCH_DEFAULT(CurlyClose);
 
 		case '>':
 			MATCH_NEXT('=', GreaterEqual);
 			MATCH_NEXT('>', ShiftRight);
 			MATCH_DEFAULT(Greater);
 
+		case '<':
+			MATCH_NEXT('=', LessEqual);
+			MATCH_NEXT('<', ShiftLeft);
+			MATCH_DEFAULT(Less);
+
 		case '-':
-			// MATCH_NEXT('>', TokenKind_Arrow)
+			MATCH_NEXT('>', RightArrow);
+			MATCH_NEXT('=', AssignMinus);
 			MATCH_DEFAULT(Minus);
 
 		case '+':
+			MATCH_NEXT('=', AssignPlus);
 			MATCH_DEFAULT(Plus);
 
+		case '*':
+			MATCH_NEXT('=', AssignStar);
+			MATCH_DEFAULT(Star);
+
+		case '%':
+			MATCH_NEXT('=', AssignModulo);
+			MATCH_DEFAULT(Modulo);
+
+		case '&':
+			MATCH_NEXT('&', LogicAnd);
+			MATCH_NEXT('=', AssignAnd);
+			MATCH_DEFAULT(And);
+
+		case '|':
+			MATCH_NEXT('|', LogicOr);
+			MATCH_NEXT('=', AssignOr);
+			MATCH_DEFAULT(Or);
+			
+		case '~':
+			MATCH_DEFAULT(Tilde);
+
+		case '!':
+			MATCH_NEXT('=', NotEqual);
+			MATCH_DEFAULT(LogicNot);
+
+		case '/': {
+			if(lexer_consume_matching(lex, '=')){
+				token.kind = TokenKind_AssignSlash;
+			} else if(lexer_consume_matching(lex, '/')){
+				lex->current -= 2;
+				token = lexer_consume_line_comment(lex);
+			} else {
+				token.kind = TokenKind_Slash;
+			}
+		} break;
+
+		case '\n': case '\r': case '\t': case '\v': case ' ': {
+			lex->current -= 1;
+			token = lexer_consume_whitespace(lex);
+		} break;
+
 		default: {
-			token.kind = TokenKind_Unknown;
+			if(is_alpha(c) || c == '_'){
+				lex->current -= 1;
+				token = lexer_consume_identifier_or_keyword(lex);
+			}
 		} break;
 	}
 
@@ -295,8 +425,8 @@ int main(){
 	Arena arena = arena_create(arena_mem, arena_size);
 
 	String source = str_lit(
-		"fn main(){\n"
-		"	return;\n"
+		"+-*/%+=-=*=/=%=>><<<><=>=!!=&|~&&&=|||=\n"
+		"let x = 100;\n"
 	);
 
 	Lexer lex = lexer_create(source, &arena);
@@ -304,8 +434,15 @@ int main(){
 	do {
 		Token tk = lexer_next_token(&lex);
 		if(tk.kind == TokenKind_EndOfFile){ break; }
-		printf("%.*s \t| \"%.*s\"\n", str_fmt(token_kind_names[tk.kind]), str_fmt(tk.lexeme));
+
+		printf("%12.*s | ", str_fmt(token_kind_name(tk.kind)));
+		if(tk.lexeme.len > 0 && tk.kind != TokenKind_Whitespace){
+			printf("\"%.*s\"\n", str_fmt(tk.lexeme));
+		} else {
+			printf("_\n");
+		}
 	} while(1);
+
 	// lexer_emit_error(&lex, LexerError_None, "CU porra");
 	// lexer_emit_error(&lex, LexerError_UnclosedString, "CU porra %d", 69);
 	// lexer_emit_error(&lex, LexerError_UnclosedString, "SKibidi porra");

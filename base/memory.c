@@ -13,7 +13,7 @@ void mem_set(void* dest, byte val, isize count){
 	__builtin_memset(dest, val, count);
 }
 
-int mem_compare(void const* left, void* const right, isize count){
+int mem_compare(void const* left, void const* right, isize count){
 	return __builtin_memcmp(left, right, count);
 }
 #else
@@ -30,7 +30,7 @@ void mem_set(void* dest, byte val, isize count){
 	memset(dest, val, count);
 }
 
-int mem_compare(void const* left, void* const right, isize count){
+int mem_compare(void const* left, void const* right, isize count){
 	return memcmp(left, right, count);
 }
 #endif

@@ -37,3 +37,11 @@ String str_format(Arena* arena, char const * restrict fmt, ...) str_attribute_fo
 
 String str_vformat(Arena* arena, char const * restrict fmt, va_list argp);
 
+isize str_compare(String left, String right);
+
+bool str_equals(String left, String right);
+
+bool str_starts_with(String s, String prefix);
+
+bool str_ends_with(String s, String postfix);
+

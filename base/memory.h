@@ -14,7 +14,7 @@ void mem_copy_no_overlap(void* dest, void const* source, isize count);
 
 void mem_set(void* dest, byte val, isize count);
 
-int mem_compare(void const* left, void* const right, isize count);
+int mem_compare(void const* left, void const* right, isize count);
 
 static inline
 bool mem_valid_alignment(usize a){
