@@ -15,6 +15,16 @@ bool is_whitespace(rune c){
 	return (c == '\n') || (c == '\r') || (c == '\t') || (c == ' ') || (c == '\v');
 }
 
+static inline
+bool is_hexadecimal(rune c){
+	return ((c >= 'a') && (c <= 'f')) || ((c >= 'A') && (c <= 'F')) || is_decimal(c);
+}
+
+static inline
+bool is_octal(rune c){
+	return (c >= '0') && (c <= '7');
+}
+
 Lexer lexer_create(String source, Arena* error_arena){
 	Lexer lex = {
 		.source = source,

@@ -64,6 +64,9 @@ typedef uintptr_t uintptr;
 typedef uint8_t   byte;
 typedef int32_t   rune;
 
+typedef float f32;
+typedef double f64;
+
 typedef struct {
 	byte const* v;
 	isize len;

@@ -39,6 +39,10 @@ String str_vformat(Arena* arena, char const * restrict fmt, va_list argp);
 
 isize str_compare(String left, String right);
 
+f64 str_parse_f64(String s);
+
+i64 str_parse_i64(String s);
+
 bool str_equals(String left, String right);
 
 bool str_starts_with(String s, String prefix);

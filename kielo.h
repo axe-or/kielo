@@ -1,6 +1,8 @@
 #pragma once
 
 #include "base/types.h"
+#include "base/memory.h"
+#include "base/string.h"
 
 #ifdef TERM_NO_COLOR
 #define TERM_COLOR_RED   ""

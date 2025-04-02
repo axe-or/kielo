@@ -19,9 +19,13 @@ bool str_equals(String left, String right){
 }
 
 bool str_starts_with(String s, String prefix){
-	unimplemented("pref");
+	if(prefix.len > s.len){ return false; }
+	if(prefix.len == 0){ return true; }
+	return mem_compare(s.v, prefix.v, prefix.len) == 0;
 }
 
 bool str_ends_with(String s, String postfix){
-	unimplemented("post");
+	if(postfix.len > s.len){ return false; }
+	if(postfix.len == 0){ return true; }
+	return mem_compare(s.v + (s.len - postfix.len), postfix.v, postfix.len) == 0;
 }
