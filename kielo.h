@@ -130,6 +130,7 @@ typedef enum {
 	LexerError_None = 0,
 	LexerError_UnknownCodepoint,
 	LexerError_UnclosedString,
+	LexerError_InvalidBase,
 } LexerError;
 
 typedef struct {
@@ -159,7 +160,7 @@ void lexer_emit_error(Lexer* lex, LexerError type, char const* fmt, ...);
 
 UTF8Decoded lexer_advance(Lexer* lex);
 
-bool lexer_consume_matching(Lexer* l, rune match);
+bool lexer_match_advance(Lexer* l, rune match);
 
 UTF8Decoded lexer_peek(Lexer* lex, isize delta);
 
@@ -170,6 +171,12 @@ Token lexer_consume_whitespace(Lexer* lex);
 Token lexer_consume_line_comment(Lexer* lex);
 
 Token lexer_consume_identifier_or_keyword(Lexer* lex);
+
+Token lexer_consume_non_decimal_integer(Lexer* lex, int base);
+
+Token lexer_consume_decimal(Lexer* lex);
+
+Token lexer_consume_number(Lexer* lex);
 
 Token lexer_next_token(Lexer* lex);
 
