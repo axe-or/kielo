@@ -1,4 +1,4 @@
-#include "lexer.h"
+#include "kielo.h"
 
 static inline
 bool is_alpha(rune c){

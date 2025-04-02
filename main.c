@@ -4,7 +4,6 @@
 #include "base/memory.h"
 #include "base/thread.h"
 #include "kielo.h"
-#include "lexer.h"
 
 void print_compiler_error(CompilerError const* err){
 	printf(TERM_COLOR_RED "error" TERM_COLOR_RESET " (%.*s:%lld) %.*s\n",
