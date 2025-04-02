@@ -284,6 +284,10 @@ Token lexer_next_token(Lexer* lex){
 		case '~':
 			MATCH_DEFAULT(Tilde);
 
+		case '=':
+			MATCH_NEXT('=', Equal);
+			MATCH_DEFAULT(Assign);
+
 		case '!':
 			MATCH_NEXT('=', NotEqual);
 			MATCH_DEFAULT(LogicNot);

@@ -24,25 +24,25 @@ int main(){
 
 	Lexer lex = lexer_create(source, &arena);
 
-	do {
-		Token tk = lexer_next_token(&lex);
-		if(tk.kind == TokenKind_EndOfFile){ break; }
+	// do {
+	// 	Token tk = lexer_next_token(&lex);
+	// 	if(tk.kind == TokenKind_EndOfFile){ break; }
 
-		printf("%12.*s | ", str_fmt(token_kind_name(tk.kind)));
-		if(tk.lexeme.len > 0 && tk.kind != TokenKind_Whitespace){
-			printf("\"%.*s\"\n", str_fmt(tk.lexeme));
-		} else {
-			printf("_\n");
-		}
-	} while(1);
+	// 	printf("%12.*s | ", str_fmt(token_kind_name(tk.kind)));
+	// 	if(tk.lexeme.len > 0 && tk.kind != TokenKind_Whitespace){
+	// 		printf("\"%.*s\"\n", str_fmt(tk.lexeme));
+	// 	} else {
+	// 		printf("_\n");
+	// 	}
+	// } while(1);
 
 	// lexer_emit_error(&lex, LexerError_None, "CU porra");
 	// lexer_emit_error(&lex, LexerError_UnclosedString, "CU porra %d", 69);
 	// lexer_emit_error(&lex, LexerError_UnclosedString, "SKibidi porra");
 	//
-	// for(CompilerError* err = lex.error; err != NULL; err = err->next){
-	// 	print_compiler_error(err);
-	// }
+	for(CompilerError* err = lex.error; err != NULL; err = err->next){
+		print_compiler_error(err);
+	}
 
 	heap_free(arena_mem);
 }
