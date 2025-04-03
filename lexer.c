@@ -191,6 +191,7 @@ rune escape_rune(rune code){
 Token lexer_consume_non_decimal_integer(Lexer* lex, int base){
 	char digits[LEXER_MAX_DIGIT_COUNT] = {0};
 	isize digit_count = 0;
+	Token token = {0};
 
 	bool (*validation_func)(rune) = NULL;
 	switch(base){
@@ -213,6 +214,8 @@ Token lexer_consume_non_decimal_integer(Lexer* lex, int base){
 		lex->current += 1;
 
 	} while(lex->current < lex->source.len && digit_count < LEXER_MAX_DIGIT_COUNT);
+
+	return token;
 
 }
 
