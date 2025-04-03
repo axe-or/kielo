@@ -36,7 +36,6 @@ struct CompilerError {
 };
 
 //// Lexer
-
 #define SPECIAL_TOKENS \
 	X(Unknown, "<Unknown>") \
 	X(EndOfFile, "<EOF>") \

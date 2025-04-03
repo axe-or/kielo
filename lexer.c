@@ -1,4 +1,5 @@
 #include "kielo.h"
+#include "memory.h"
 
 static inline
 bool is_alpha(rune c){
@@ -18,6 +19,11 @@ bool is_whitespace(rune c){
 static inline
 bool is_hexadecimal(rune c){
 	return ((c >= 'a') && (c <= 'f')) || ((c >= 'A') && (c <= 'F')) || is_decimal(c);
+}
+
+static inline
+bool is_binary(rune c){
+	return c == '0' || c == '1';
 }
 
 static inline
@@ -142,6 +148,7 @@ Token lexer_consume_identifier_or_keyword(Lexer* lex){
 	}
 	return token;
 }
+
 String lexer_current_lexeme(Lexer const* lex){
 	byte const* start = &lex->source.v[lex->start];
 	return (String){
@@ -179,9 +186,36 @@ rune escape_rune(rune code){
 	return 0;
 }
 
+#define LEXER_MAX_DIGIT_COUNT 256
+
 Token lexer_consume_non_decimal_integer(Lexer* lex, int base){
-	unimplemented("Nondec num");
+	char digits[LEXER_MAX_DIGIT_COUNT] = {0};
+	isize digit_count = 0;
+
+	bool (*validation_func)(rune) = NULL;
+	switch(base){
+	case 2: validation_func = is_binary; break;
+	case 8: validation_func = is_octal; break;
+	case 16: validation_func = is_hexadecimal; break;
+	default: ensure(false, "Invalid base"); break;
+	}
+
+	do {
+		char c = lex->source.v[lex->current];
+		if(validation_func(c)){
+			digits[digit_count] = c;
+			digit_count += 1;
+		} else if(c == '_'){
+			continue;
+		} else {
+			break;
+		}
+		lex->current += 1;
+
+	} while(lex->current < lex->source.len && digit_count < LEXER_MAX_DIGIT_COUNT);
+
 }
+
 
 Token lexer_consume_decimal(Lexer* lex){
 	unimplemented("Dec num");
@@ -354,3 +388,4 @@ Token lexer_next_token(Lexer* lex){
 #undef MATCH_NEXT
 #undef MATCH_DEFAULT
 
+#undef LEXER_MAX_DIGIT_COUNT
