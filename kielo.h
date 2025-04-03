@@ -130,6 +130,7 @@ String token_kind_name(TokenKind k);
 typedef enum {
 	LexerError_None = 0,
 	LexerError_UnknownCodepoint,
+	LexerError_InvalidNumber,
 	LexerError_UnclosedString,
 	LexerError_InvalidBase,
 } LexerError;
@@ -137,6 +138,11 @@ typedef enum {
 typedef struct {
 	String lexeme;
 	u32 kind;
+	union {
+		i64 integer;
+		f64 real;
+		rune codepoint;
+	} value;
 } Token;
 
 typedef struct {

@@ -43,7 +43,7 @@ isize str_compare(String left, String right);
 
 bool str_parse_i64(String s, u32 base, i64* out);
 
-// bool str_parse_f64(String s, f64* out);
+bool str_parse_f64(String s, f64* out);
 
 bool str_equals(String left, String right);
 

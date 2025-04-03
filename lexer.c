@@ -2,6 +2,11 @@
 #include "memory.h"
 
 static inline
+bool lexer_done(Lexer const * lex){
+	return lex->current >= lex->source.len;
+}
+
+static inline
 bool is_alpha(rune c){
 	return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z');
 }
@@ -73,7 +78,7 @@ void lexer_emit_error(Lexer* lex, LexerError type, char const* fmt, ...){
 
 UTF8Decoded lexer_advance(Lexer* lex){
 	if(lex->current >= lex->source.len){
-		return (UTF8Decoded){0,0};
+		return (UTF8Decoded){0,1};
 	}
 	UTF8Decoded res = utf8_decode(lex->source.v + lex->current, lex->source.len - lex->current);
 	lex->current += res.len;
@@ -101,12 +106,13 @@ bool lexer_match_advance(Lexer* l, rune match){
 Token lexer_consume_line_comment(Lexer* lex){
 	String first = str_sub(lex->source, lex->current, lex->current + 2);
 	ensure(str_starts_with(first, str_lit("//")), "Not in a comment");
-	
+
 	lex->start = lex->current;
+
 	do {
 		if(lex->source.v[lex->current] == '\n'){ break; }
 		lex->current += 1;
-	} while(lex->current < lex->source.len);
+	} while(!lexer_done(lex));
 
 	Token token = {
 		.kind = TokenKind_Comment,
@@ -116,21 +122,22 @@ Token lexer_consume_line_comment(Lexer* lex){
 	return token;
 }
 
+
 Token lexer_consume_identifier_or_keyword(Lexer* lex){
 	rune first = lex->source.v[lex->current];
 	Token token = {0};
 	ensure(is_alpha(first) || first == '_', "Not on part of identifier");
 
 	lex->start = lex->current;
-	do {
+
+	for(;;) {
 		UTF8Decoded dec = lexer_advance(lex);
 		rune c = dec.codepoint;
 
 		if(!is_alpha(c) && !is_decimal(c) && c != '_'){
-			lex->current -= dec.len;
 			break;
 		}
-	} while(lex->current < lex->source.len);
+	}
 
 	token.lexeme = lexer_current_lexeme(lex);
 	token.kind = TokenKind_Identifier;
@@ -165,9 +172,9 @@ Token lexer_consume_whitespace(Lexer* lex){
 	};
 
 	do {
-		if(!is_whitespace(lex->source.v[lex->current])){ break; }
 		lex->current += 1;
-	} while(lex->current <= lex->source.len);
+		if(!is_whitespace(lex->source.v[lex->current])){ break; }
+	} while(!lexer_done(lex));
 
 	tk.lexeme = lexer_current_lexeme(lex);
 
@@ -194,6 +201,7 @@ Token lexer_consume_non_decimal_integer(Lexer* lex, int base){
 	Token token = {0};
 
 	bool (*validation_func)(rune) = NULL;
+
 	switch(base){
 	case 2: validation_func = is_binary; break;
 	case 8: validation_func = is_octal; break;
@@ -203,40 +211,57 @@ Token lexer_consume_non_decimal_integer(Lexer* lex, int base){
 
 	do {
 		char c = lex->source.v[lex->current];
-		if(validation_func(c)){
-			digits[digit_count] = c;
-			digit_count += 1;
-		} else if(c == '_'){
-			continue;
-		} else {
-			break;
-		}
 		lex->current += 1;
 
-	} while(lex->current < lex->source.len && digit_count < LEXER_MAX_DIGIT_COUNT);
+		if(c == '_'){
+			continue;
+		}
+		else if(!validation_func(c)) {
+			lex->current -= 1;
+			break;
+		}
+
+	} while(!lexer_done(lex) && digit_count < LEXER_MAX_DIGIT_COUNT);
+
+	String lexeme = lexer_current_lexeme(lex);
+	i64 val = 0;
+
+	String numeric_part = str_sub(lexeme, 2, lexeme.len);
+	if(!str_parse_i64(numeric_part, base, &val)){
+		lexer_emit_error(lex, LexerError_InvalidNumber, "Invalid numeric literal: '%.*s'", str_fmt(lexeme));
+		return token;
+	}
+
+	token.lexeme = lexeme;
+	token.kind = TokenKind_Integer;
+	token.value.integer = val;
 
 	return token;
-
 }
 
-
 Token lexer_consume_decimal(Lexer* lex){
-	unimplemented("Dec num");
+	unimplemented("Decimal");
+	// lex->start = lex->current;
+	// bool is_float = false;
+	//
+	// re
 }
 
 Token lexer_consume_number(Lexer* lex){
+	lex->start = lex->current;
+
 	rune first = lexer_peek(lex, 0).codepoint;
-	Token token = {0};
 	ensure(is_decimal(first), "Not on a number");
+	Token token = {0};
 
 	rune second = lexer_peek(lex, 1).codepoint;
 	int base = 10;
 
-	if(is_alpha(second)){
+	if(first == '0' && is_alpha(second)){
 		switch(second){
-		case 'b': case 'B': base = 16; break;
+		case 'b': case 'B': base = 2; break;
 		case 'o': case 'O': base = 8; break;
-		case 'x': case 'X': base = 2; break;
+		case 'x': case 'X': base = 16; break;
 		default: {
 			lexer_emit_error(lex, LexerError_InvalidBase, "Invalid base prefix: '%c'\n", second);
 			return token;
@@ -245,6 +270,8 @@ Token lexer_consume_number(Lexer* lex){
 	}
 
 	if(base != 10){
+		printf(">> %c%c : %d\n", first, second, base);
+		lex->current += 2;
 		return lexer_consume_non_decimal_integer(lex, base);
 	}
 

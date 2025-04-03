@@ -1,7 +1,7 @@
 #!/usr/bin/env sh
 
-cc=clang
-cflags='-O1 -std=c17 -fPIC -fno-strict-aliasing -fwrapv'
+cc=gcc
+cflags='-O0 -std=c17 -fPIC -fno-strict-aliasing -fwrapv -g'
 ldflags=''
 
 Run(){ echo "$@"; $@; }

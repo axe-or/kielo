@@ -1,4 +1,5 @@
 #include "string.h"
+#include <stdlib.h>
 
 isize str_compare(String left, String right){
 	if(left.len > right.len){
@@ -35,6 +36,7 @@ String str_sub(String s, isize start, isize end){
 	return (String){ .v = s.v + start, .len = end - start };
 }
 
+#define STRCONV_TEMP_BUFFER_SIZE 128
 
 static inline
 i64 str_ipow10(int exponent){
@@ -115,6 +117,34 @@ bool str_parse_i64(String s, u32 base, i64* out){
 	}
 
 	*out = n;
+	return true;
+}
+
+bool str_parse_f64(String s, f64* out){
+	if(s.len == 0){ return false; }
+
+	*out = 0;
+	char digits[STRCONV_TEMP_BUFFER_SIZE] = {0};
+	isize digit_count = 0;
+
+	/* Extract digits only */ {
+		for(isize i = 0; i < s.len && digit_count < STRCONV_TEMP_BUFFER_SIZE; i++){
+			char c = s.v[i];
+			if(c == '_'){ continue; }
+
+			digits[digit_count] = s.v[i];
+			digit_count += 1;
+		}
+	}
+
+	char* p = 0;
+
+	f64 val = strtod(&digits[0], &p);
+	if(p != &digits[digit_count]){
+		return false;
+	}
+
+	*out = val;
 	return true;
 }
 
