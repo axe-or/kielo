@@ -117,3 +117,5 @@ bool str_parse_i64(String s, u32 base, i64* out){
 	*out = n;
 	return true;
 }
+
+#undef STRCONV_TEMP_BUFFER_SIZE

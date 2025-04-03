@@ -4,14 +4,6 @@
 #include "stb_sprintf.h"
 #include <stdlib.h>
 
-#define STRCONV_TEMP_BUFFER_SIZE 128
-
-// TODO: Validation step
-f64 str_parse_f64(String s){
-	char temp[STRCONV_TEMP_BUFFER_SIZE] = {0};
-	mem_copy_no_overlap(temp, s.v, min(s.len, STRCONV_TEMP_BUFFER_SIZE));
-	return atof(temp);
-}
 
 String str_vformat(Arena* arena, char const * restrict fmt, va_list argp){
 	char* ptr = arena->data + arena->offset;
@@ -37,4 +29,3 @@ String str_format(Arena* arena, char const * restrict fmt, ...){
 	return s;
 }
 
-#undef STRCONV_TEMP_BUFFER_SIZE
