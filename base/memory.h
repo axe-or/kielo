@@ -31,14 +31,35 @@ uintptr mem_align_forward_ptr(uintptr p, uintptr a){
 	return p;
 }
 
+static inline
+isize mem_align_forward_size(isize p, isize a){
+	ensure(mem_valid_alignment(a), "Alignment must be a power of 2 greater than 0");
+	isize mod = p & (a - 1); /* Fast modulo for powers of 2 */
+	if(mod > 0){
+		p += (a - mod);
+	}
+	return p;
+}
+
+typedef enum {
+	ArenaType_Buffer = 0,  /* Static arena backed by buffer */
+	ArenaType_Dynamic = 1, /* Arena with backup storage from the heap */
+	ArenaType_Virtual = 2, /* Arena with large pre-reserved allocation that commits as needed */
+} ArenaType;
+
 //// Arena allocator
-typedef struct {
-	void*  data;
+typedef struct Arena Arena;
+
+struct Arena {
+	void* data;
 	isize offset;
 	isize capacity;
-	void*  last_allocation;
-	int    region_count;
-} Arena;
+	isize commited; /* Virtual arena only */
+	void* last_allocation;
+	Arena* next; /* Always null for non-dynamic arenas */
+	i32 region_count;
+	u32 type;
+};
 
 typedef struct {
 	Arena* arena;
@@ -49,6 +70,10 @@ typedef struct {
 	((Type *)arena_alloc((A), sizeof(Type) * (Count), alignof(Type)))
 
 Arena arena_create(uint8_t* buf, isize buf_size);
+
+Arena arena_create_dynamic(uint8_t* buf, isize buf_size);
+
+Arena arena_create_virtual(isize reserve_size);
 
 void* arena_alloc(Arena* arena, isize size, isize align);
 
@@ -62,16 +87,30 @@ void arena_region_end(ArenaRegion reg);
 
 void* arena_realloc(Arena* a, void* ptr, isize old_size, isize new_size, isize align);
 
+//// Virtual memory allocator
+
+// TODO: add assertion to enforce this.
+#define MEM_VIRTUAL_PAGE_SIZE (4ll * 1024ll)
+
+typedef enum {
+	MemoryProtection_NoAccess = 0,
+	MemoryProtection_Read     = (1 << 0),
+	MemoryProtection_Write    = (1 << 1),
+	MemoryProtection_Execute  = (1 << 2),
+} MemoryProtection;
+
+void* virtual_reserve(isize size);
+
+void virtual_free(void* p, isize size);
+
+void* virtual_commit(void* p, isize size);
+
+void virtual_decommit(void* p, isize size);
+
+void virtual_protect(void* p, isize size, u8 prot);
+
 //// Heap allocator
 void* heap_alloc(isize size, isize align);
 
 void heap_free(void* ptr);
-
-//// Container helpers
-// typedef void* (*MemReallocFunc)(void* ctx, void* ptr, isize old_size, isize new_size, isize align);
-//
-// static inline
-// void* arena_realloc_wrapper(void* a, void* ptr, isize old_size, isize new_size, isize align){
-// 	return arena_realloc(a, ptr, old_size, new_size, align);
-// }
 

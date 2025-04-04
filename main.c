@@ -12,6 +12,21 @@ void print_compiler_error(CompilerError const* err){
 		str_fmt(err->message));
 }
 
+#define mem_GiB (1024ll * 1024ll * 1024ll)
+
+int main(){
+#define BIG_SIZE 64 * mem_GiB
+	char* p = virtual_reserve(BIG_SIZE);
+	char* p2 = virtual_commit(p, 4096);
+
+	printf("%p\n", p);
+	printf("%02x\n", p2[4096-1]);
+
+	virtual_free(p, BIG_SIZE);
+	return 0;
+}
+
+#if 0
 int main(){
 	const isize arena_size = 8 * mem_megabyte;
 	byte* arena_mem = heap_alloc(arena_size, 4096);
@@ -54,4 +69,4 @@ int main(){
 
 	heap_free(arena_mem);
 }
-
+#endif

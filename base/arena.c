@@ -7,6 +7,8 @@ Arena arena_create(uint8_t* buf, isize buf_size){
 		.offset = 0,
 		.capacity = buf_size,
 		.last_allocation = NULL,
+		.commited = buf_size,
+		.type = ArenaType_Buffer,
 		.region_count = 0,
 	};
 }
