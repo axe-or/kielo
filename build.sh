@@ -1,7 +1,7 @@
 #!/usr/bin/env sh
 
 cc=gcc
-cflags='-O0 -std=c17 -fPIC -fno-strict-aliasing -fwrapv -g'
+cflags='-O0 -std=c17 -Wall -Wextra -Werror=return-type -fPIC -fno-strict-aliasing -fwrapv -g'
 ldflags=''
 
 Run(){ echo "$@"; $@; }

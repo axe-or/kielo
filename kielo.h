@@ -154,7 +154,6 @@ typedef struct {
 	String source;
 	String filename;
 	isize current;
-	isize start;
 
 	Arena* error_arena;
 	CompilerError* error;
@@ -170,8 +169,6 @@ UTF8Decoded lexer_advance(Lexer* lex);
 bool lexer_match_advance(Lexer* l, rune match);
 
 UTF8Decoded lexer_peek(Lexer* lex, isize delta);
-
-String lexer_current_lexeme(Lexer const* lex);
 
 Token lexer_consume_whitespace(Lexer* lex);
 

@@ -18,8 +18,12 @@ int main(){
 	Arena arena = arena_create(arena_mem, arena_size);
 
 	String source = str_lit(
-		// "+-*/%+=-=*=/=%=>><<<><=>=!!=&|~&&&=|||=\n"
-		"let x : i32 = 0x1230;"
+		"//+-*/%+=-=*=/=%=>><<<><=>=!!=&|~&&&=|||=\n"
+		"0xfea0_caf3_babe\n"
+		"0b1010010101010010100101111111010\n"
+		"0o100\n"
+		"1920390\n"
+		"1e-3\n"
 	);
 
 	Lexer lex = lexer_create(source, &arena);
@@ -27,11 +31,18 @@ int main(){
 	do {
 		Token tk = lexer_next_token(&lex);
 		if(tk.kind == TokenKind_EndOfFile){ break; }
+		if(tk.kind == TokenKind_Whitespace){ continue; }
 
 		printf("%12.*s | ", str_fmt(token_kind_name(tk.kind)));
 		if(tk.lexeme.len > 0 && tk.kind != TokenKind_Whitespace){
-			printf("\"%.*s\"\n", str_fmt(tk.lexeme));
-
+			printf("\"%.*s\"", str_fmt(tk.lexeme));
+			if(tk.kind == TokenKind_Integer){
+				printf("-> %td\n", tk.value.integer);
+			} else if(tk.kind == TokenKind_Real){
+				printf("-> %g\n", tk.value.real);
+			} else {
+				printf("\n");
+			}
 		} else {
 			printf("_\n");
 		}
@@ -40,10 +51,6 @@ int main(){
 	for(CompilerError* err = lex.error; err != NULL; err = err->next){
 		print_compiler_error(err);
 	}
-	
-	f64 n = 0;
-	ensure(str_parse_f64(str_lit("-500_1.12930_1930e+3"), &n), "");
-	printf("%.8f\n", n);
 
 	heap_free(arena_mem);
 }

@@ -40,7 +40,6 @@ Lexer lexer_create(String source, Arena* error_arena){
 	Lexer lex = {
 		.source = source,
 		.current = 0,
-		.start = 0,
 		.error_arena = error_arena,
 		.error = NULL,
 	};
@@ -107,7 +106,7 @@ Token lexer_consume_line_comment(Lexer* lex){
 	String first = str_sub(lex->source, lex->current, lex->current + 2);
 	ensure(str_starts_with(first, str_lit("//")), "Not in a comment");
 
-	lex->start = lex->current;
+	isize start = lex->current;
 
 	do {
 		if(lex->source.v[lex->current] == '\n'){ break; }
@@ -116,30 +115,30 @@ Token lexer_consume_line_comment(Lexer* lex){
 
 	Token token = {
 		.kind = TokenKind_Comment,
-		.lexeme = lexer_current_lexeme(lex),
+		.lexeme = str_sub(lex->source, start, lex->current),
 	};
 
 	return token;
 }
-
 
 Token lexer_consume_identifier_or_keyword(Lexer* lex){
 	rune first = lex->source.v[lex->current];
 	Token token = {0};
 	ensure(is_alpha(first) || first == '_', "Not on part of identifier");
 
-	lex->start = lex->current;
+	isize start = lex->current;
 
 	for(;;) {
 		UTF8Decoded dec = lexer_advance(lex);
 		rune c = dec.codepoint;
 
 		if(!is_alpha(c) && !is_decimal(c) && c != '_'){
+			lex->current -= dec.len;
 			break;
 		}
 	}
 
-	token.lexeme = lexer_current_lexeme(lex);
+	token.lexeme = str_sub(lex->source, start, lex->current);
 	token.kind = TokenKind_Identifier;
 
 	const isize n =  sizeof(keyword_lexemes) / sizeof(keyword_lexemes[0]);
@@ -156,17 +155,9 @@ Token lexer_consume_identifier_or_keyword(Lexer* lex){
 	return token;
 }
 
-String lexer_current_lexeme(Lexer const* lex){
-	byte const* start = &lex->source.v[lex->start];
-	return (String){
-		.v = start,
-		.len = lex->current - lex->start,
-	};
-}
-
 Token lexer_consume_whitespace(Lexer* lex){
 	ensure(is_whitespace(lex->source.v[lex->current]), "Not on whitespace");
-	lex->start = lex->current;
+	isize start = lex->current;
 	Token tk = {
 		.kind = TokenKind_Whitespace,
 	};
@@ -176,7 +167,7 @@ Token lexer_consume_whitespace(Lexer* lex){
 		if(!is_whitespace(lex->source.v[lex->current])){ break; }
 	} while(!lexer_done(lex));
 
-	tk.lexeme = lexer_current_lexeme(lex);
+	tk.lexeme = str_sub(lex->source, start, lex->current);
 
 	return tk;
 }
@@ -196,9 +187,8 @@ rune escape_rune(rune code){
 #define LEXER_MAX_DIGIT_COUNT 256
 
 Token lexer_consume_non_decimal_integer(Lexer* lex, int base){
-	char digits[LEXER_MAX_DIGIT_COUNT] = {0};
-	isize digit_count = 0;
 	Token token = {0};
+	isize start = lex->current;
 
 	bool (*validation_func)(rune) = NULL;
 
@@ -213,17 +203,20 @@ Token lexer_consume_non_decimal_integer(Lexer* lex, int base){
 		char c = lex->source.v[lex->current];
 		lex->current += 1;
 
-		if(c == '_'){
+		if(c == '_' || validation_func(c)){
 			continue;
 		}
-		else if(!validation_func(c)) {
+		else if(is_whitespace(c)){
 			lex->current -= 1;
 			break;
 		}
+		else {
+			lexer_emit_error(lex, LexerError_InvalidNumber, "Invalid digit to base-%d number: '%c'\n", base, c);
+			return token;
+		}
+	} while(!lexer_done(lex));
 
-	} while(!lexer_done(lex) && digit_count < LEXER_MAX_DIGIT_COUNT);
-
-	String lexeme = lexer_current_lexeme(lex);
+	String lexeme = str_sub(lex->source, start - 2, lex->current);
 	i64 val = 0;
 
 	String numeric_part = str_sub(lexeme, 2, lexeme.len);
@@ -240,16 +233,66 @@ Token lexer_consume_non_decimal_integer(Lexer* lex, int base){
 }
 
 Token lexer_consume_decimal(Lexer* lex){
-	unimplemented("Decimal");
-	// lex->start = lex->current;
-	// bool is_float = false;
-	//
-	// re
+	bool has_dot = false;
+	bool has_exp = false;
+	Token token = {0};
+
+	isize start = lex->current;
+	do {
+		char c = lex->source.v[lex->current];
+		lex->current += 1;
+
+		if(c == '_' || is_decimal(c)){ continue; }
+
+		if(c == '.'){
+			if(!has_dot){
+				has_dot = true;
+			} else {
+				lexer_emit_error(lex, LexerError_InvalidNumber, "Duplicate decimal point in numeric literal");
+				return token;
+			}
+		}
+		else if(c == 'e' || c == 'E'){
+			if(!has_exp){
+				has_exp = true;
+				lexer_match_advance(lex, '+');
+				lexer_match_advance(lex, '-');
+			} else {
+				lexer_emit_error(lex, LexerError_InvalidNumber, "Duplicate exponent in numeric literal");;
+				return token;
+			}
+		}
+		else {
+			lex->current -= 1;
+			break;
+		}
+	} while(!lexer_done(lex));
+
+	String lexeme = str_sub(lex->source, start, lex->current);
+
+	if(has_dot || has_exp){
+		f64 val = 0;
+		if(!str_parse_f64(lexeme, &val)){
+			lexer_emit_error(lex, LexerError_InvalidNumber, "Invalid numeric literal: '%.*s'", str_fmt(lexeme));
+		}
+		token.kind = TokenKind_Real;
+		token.value.real = val;
+	}
+	else {
+		i64 val = 0;
+		if(!str_parse_i64(lexeme, 10, &val)){
+			lexer_emit_error(lex, LexerError_InvalidNumber, "Invalid numeric literal: '%.*s'", str_fmt(lexeme));
+		}
+		token.kind = TokenKind_Integer;
+		token.value.integer = val;
+	}
+
+	token.lexeme = lexeme;
+
+	return token;
 }
 
 Token lexer_consume_number(Lexer* lex){
-	lex->start = lex->current;
-
 	rune first = lexer_peek(lex, 0).codepoint;
 	ensure(is_decimal(first), "Not on a number");
 	Token token = {0};
@@ -270,13 +313,11 @@ Token lexer_consume_number(Lexer* lex){
 	}
 
 	if(base != 10){
-		printf(">> %c%c : %d\n", first, second, base);
 		lex->current += 2;
 		return lexer_consume_non_decimal_integer(lex, base);
 	}
 
 	token = lexer_consume_decimal(lex);
-
 	return token;
 }
 
