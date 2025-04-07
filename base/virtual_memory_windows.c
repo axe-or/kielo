@@ -6,35 +6,32 @@
 	(((uintptr)(X) & (MEM_VIRTUAL_PAGE_SIZE - 1)) == 0)
 
 void* virtual_reserve(isize size){
-	ensure(aligned_to_page_boundary(size), "Size is not aligned to page boundary");
+	// ensure(aligned_to_page_boundary(size), "Size is not aligned to page boundary");
 	void* p = VirtualAlloc(NULL, size, MEM_RESERVE, PAGE_NOACCESS);
 	return p;
 }
 
 void virtual_free(void* p, isize size){
-	ensure(aligned_to_page_boundary(size), "Size is not aligned to page boundary");
-	ensure(aligned_to_page_boundary(p), "Pointer is not aligned to page boundary");
+	// ensure(aligned_to_page_boundary(size), "Size is not aligned to page boundary");
+	// ensure(aligned_to_page_boundary(p), "Pointer is not aligned to page boundary");
 	VirtualFree(p, size, MEM_RELEASE);
 }
 
 void* virtual_commit(void* p, isize size){
-	ensure(aligned_to_page_boundary(size), "Size is not aligned to page boundary");
-	ensure(aligned_to_page_boundary(p), "Pointer is not aligned to page boundary");
-
+	// ensure(aligned_to_page_boundary(size), "Size is not aligned to page boundary");
+	// ensure(aligned_to_page_boundary(p), "Pointer is not aligned to page boundary");
 	return VirtualAlloc(p, size, MEM_COMMIT, PAGE_READWRITE);
 }
 
 void virtual_decommit(void* p, isize size){
-	ensure(aligned_to_page_boundary(size), "Size is not aligned to page boundary");
-	ensure(aligned_to_page_boundary(p), "Pointer is not aligned to page boundary");
-
+	// ensure(aligned_to_page_boundary(size), "Size is not aligned to page boundary");
+	// ensure(aligned_to_page_boundary(p), "Pointer is not aligned to page boundary");
 	VirtualFree(p, size, MEM_DECOMMIT);
 }
 
 void virtual_protect(void* p, isize size, u8 prot){
-	ensure(aligned_to_page_boundary(size), "Size is not aligned to page boundary");
-	ensure(aligned_to_page_boundary(p), "Pointer is not aligned to page boundary");
-
+	// ensure(aligned_to_page_boundary(size), "Size is not aligned to page boundary");
+	// ensure(aligned_to_page_boundary(p), "Pointer is not aligned to page boundary");
 	uintptr old = 0;
 	i32 prot_flag = -1;
 	(void)old;

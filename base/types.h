@@ -1,24 +1,6 @@
 #pragma once
 
-//// Compilation context
-#if defined(__clang__)
-	#define COMPILER_CLANG 1
-#elif defined(__GNUC__)
-	#define COMPILER_GCC 1
-#elif defined(_MSC_VER)
-	#define COMPILER_MSVC 1
-#else
-	#error "Unsupported compiler"
-#endif
-
-#if defined(__linux__)
-	#define OS_LINUX 1
-#elif defined(_WIN32) || defined(_WIN64)
-	#define OS_WINDOWS 1
-#else
-	#error "Unsupported operating system"
-#endif
-
+#include "build_context.h"
 //// Useful macros
 #if defined(COMPILER_MSVC)
 	#define typeof(X) __typeof(X)

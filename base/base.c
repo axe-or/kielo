@@ -1,4 +1,5 @@
 /* Main base translation unit, shall be compiled ONCE per project */
+#include "build_context.h"
 #include "memory.c"
 #include "arena.c"
 #include "heap.c"
@@ -15,4 +16,6 @@
 
 #if defined(OS_WINDOWS)
 	#include "virtual_memory_windows.c"
+#elif defined(OS_LINUX)
+	#include "virtual_memory_linux.c"
 #endif
