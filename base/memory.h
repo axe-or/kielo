@@ -42,7 +42,7 @@ isize mem_align_forward_size(isize p, isize a){
 }
 
 typedef enum {
-	ArenaType_Buffer = 0,  /* Static arena backed by buffer */
+	ArenaType_Buffer  = 0, /* Static arena backed by buffer */
 	ArenaType_Dynamic = 1, /* Arena with backup storage from the heap */
 	ArenaType_Virtual = 2, /* Arena with large pre-reserved allocation that commits as needed */
 } ArenaType;
@@ -50,11 +50,16 @@ typedef enum {
 //// Arena allocator
 typedef struct Arena Arena;
 
-struct Arena {
+typedef struct {
 	void* data;
+	isize commited;
+	isize reserved;
+} MemoryBlock;
+
+struct Arena {
+	MemoryBlock block;
 	isize offset;
-	isize capacity;
-	isize commited; /* Virtual arena only */
+
 	void* last_allocation;
 	Arena* next; /* Always null for non-dynamic arenas */
 	i32 region_count;
@@ -69,7 +74,7 @@ typedef struct {
 #define arena_make(A, Type, Count) \
 	((Type *)arena_alloc((A), sizeof(Type) * (Count), alignof(Type)))
 
-Arena arena_create(uint8_t* buf, isize buf_size);
+Arena arena_create_buffer(uint8_t* buf, isize buf_size);
 
 Arena arena_create_dynamic(uint8_t* buf, isize buf_size);
 
