@@ -16,13 +16,6 @@ void print_compiler_error(CompilerError const* err){
 
 int main(){
 #define BIG_SIZE 64 * mem_GiB
-	char* p = virtual_reserve(BIG_SIZE);
-	char* p2 = virtual_commit(p, 4096);
-
-	printf("%p\n", p);
-	printf("%02x\n", p2[4096-1]);
-
-	virtual_free(p, BIG_SIZE);
 	return 0;
 }
 

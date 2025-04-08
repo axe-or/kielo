@@ -41,29 +41,18 @@ isize mem_align_forward_size(isize p, isize a){
 	return p;
 }
 
-typedef enum {
-	ArenaType_Buffer  = 0, /* Static arena backed by buffer */
-	ArenaType_Dynamic = 1, /* Arena with backup storage from the heap */
-	ArenaType_Virtual = 2, /* Arena with large pre-reserved allocation that commits as needed */
-} ArenaType;
-
 //// Arena allocator
 typedef struct Arena Arena;
 
-typedef struct {
-	void* data;
-	isize commited;
-	isize reserved;
-} MemoryBlock;
-
 struct Arena {
-	MemoryBlock block;
+	void* data;
+	isize capacity;
 	isize offset;
 
 	void* last_allocation;
 	Arena* next; /* Always null for non-dynamic arenas */
 	i32 region_count;
-	u32 type;
+	bool dynamic;
 };
 
 typedef struct {
@@ -74,11 +63,9 @@ typedef struct {
 #define arena_make(A, Type, Count) \
 	((Type *)arena_alloc((A), sizeof(Type) * (Count), alignof(Type)))
 
-Arena arena_create_buffer(uint8_t* buf, isize buf_size);
+Arena arena_create_buffer(byte* buf, isize buf_size);
 
-Arena arena_create_dynamic(uint8_t* buf, isize buf_size);
-
-Arena arena_create_virtual(isize reserve_size);
+Arena arena_create_dynamic(byte* buf, isize buf_size);
 
 void* arena_alloc(Arena* arena, isize size, isize align);
 
@@ -91,28 +78,6 @@ ArenaRegion arena_region_begin(Arena* a);
 void arena_region_end(ArenaRegion reg);
 
 void* arena_realloc(Arena* a, void* ptr, isize old_size, isize new_size, isize align);
-
-//// Virtual memory allocator
-
-// TODO: add assertion to enforce this.
-#define MEM_VIRTUAL_PAGE_SIZE (4ll * 1024ll)
-
-typedef enum {
-	MemoryProtection_NoAccess = 0,
-	MemoryProtection_Read     = (1 << 0),
-	MemoryProtection_Write    = (1 << 1),
-	MemoryProtection_Execute  = (1 << 2),
-} MemoryProtection;
-
-void* virtual_reserve(isize size);
-
-void virtual_free(void* p, isize size);
-
-void* virtual_commit(void* p, isize size);
-
-void virtual_decommit(void* p, isize size);
-
-void virtual_protect(void* p, isize size, u8 prot);
 
 //// Heap allocator
 void* heap_alloc(isize size, isize align);
